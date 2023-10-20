@@ -1,0 +1,7 @@
+package client
+
+type HealthCheckRequest = payment_service.HealthCheckRequest
+type HealthCheckResponse = payment_service.HealthCheckResponse
+
+type ProcessMpesaPaymentRequest = payment_service.MpesaPaymentRequest
+type ProcessMpesaPaymentResponse = payment_service.MpesaPaymentResponse

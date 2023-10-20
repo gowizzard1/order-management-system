@@ -1,0 +1,118 @@
+name: Lint, Test, and Security Check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [orders, payments]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "^1.21"
+
+      - name: Run golangci-lint
+        if: contains(github.event.head_commit.modified, matrix.service) || github.event_name == 'pull_request'
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.53
+          working-directory: ${{ matrix.service }}
+
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: "read"
+      id-token: "write"
+    strategy:
+      matrix:
+        service: [orders, payments]
+
+    env:
+      GOOGLE_CLOUD_PROJECT: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
+      GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+      FIRESTORE_EMULATOR_HOST: ${{ secrets.FIRESTORE_EMULATOR_HOST }}
+      ENVIRONMENT: "test"
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "^1.21"
+
+      - id: "auth"
+        uses: "google-github-actions/auth@v1"
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      # gcloud is needed since we are using the Firestore emulator for testing
+      - name: "Set up Cloud SDK"
+        uses: "google-github-actions/setup-gcloud@v1"
+        with:
+          version: ">= 363.0.0"
+
+      - name: Run Tests
+        if: contains(github.event.head_commit.modified, matrix.service) || github.event_name == 'pull_request'
+        run: |
+          cd ${{ matrix.service }}
+          make test
+
+      - name: Check Coverage
+        run: |
+
+          cd ${{ matrix.service }} && make coverage
+          coverage=$(go tool cover -func=coverage.out | grep 'total:' | awk '{print substr($3, 1, length($3)-1)}')
+          if (( $(echo "$coverage < 20" | bc -l) )); then
+            echo "Code coverage is less than 20%"
+            exit 1
+          fi
+
+  security:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [orders, payments]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "^1.21"
+
+      - name: Cache gosec
+        uses: actions/cache@v2
+        with:
+          path: ~/go/bin/gosec
+          key: ${{ runner.os }}-gosec-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-gosec-
+
+      - name: Install gosec
+        run: |
+          if ! command -v gosec &> /dev/null
+          then
+            go install github.com/securego/gosec/v2/cmd/gosec@latest
+          fi
+
+      - name: Run gosec
+        run: |
+          cd ${{ matrix.service }}
+          make security
