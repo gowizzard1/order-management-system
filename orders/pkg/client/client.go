@@ -10,7 +10,6 @@ import (
 )
 
 type OrdersClient interface {
-	HealthCheck(ctx context.Context, product *HealthCheckRequest) (*HealthCheckResponse, error)
 	UpdateOrderStatus(ctx context.Context, req *generated.UpdateOrderStatusRequest) (*generated.UpdateOrderStatusResponse, error)
 }
 type GrpcOrderClient struct {

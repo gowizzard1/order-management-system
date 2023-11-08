@@ -12,7 +12,7 @@ import (
 
 	"github.com/leta/order-management-system/orders/internal/checkout"
 	"github.com/leta/order-management-system/orders/internal/handlers"
-	paymentscli "github.com/leta/order-management-system/payments/pkg/client"
+	p "github.com/leta/order-management-system/payments/pkg/client"
 )
 
 const (
@@ -50,23 +50,25 @@ func main() {
 
 	firestoreService := db.NewFirestoreService(firestoreClient)
 
-	ProductRepository := product.NewProductService(firestoreService)
+	productRepository := product.NewProductRepository(firestoreService)
+
+	//prdSvs := product.NewProductService(productRepository)
 	customerRepository := customers.NewCustomerRepository(firestoreService)
 	customerSvc := customers.NewCustomerService(customerRepository)
 
 	orderRepository := orders.NewOrderRepository(firestoreService)
 	orderSvc := orders.NewOrdersService(*orderRepository)
 	// Setup payments service client
-	conn, err := paymentscli.ConnectToPaymentService("localhost:50051")
+	conn, err := p.ConnectToPaymentService("localhost:50051")
 	if err != nil {
 		log.Fatalf("Failed to connect to orders service: %v", err)
 	}
-	paymentsClient := paymentscli.NewGrpcPaymentsClient(conn)
+	paymentsClient := p.NewGrpcPaymentsClient(conn)
 
 	checkoutService := checkout.NewCheckoutService(
-		ProductRepository, customerRepository, orderRepository, paymentsClient)
+		productRepository, customerRepository, orderRepository, paymentsClient)
 
-	s.ProductRepository = ProductRepository
+	s.ProductRepository = productRepository
 	s.CustomerService = customerSvc
 	s.OrderService = orderSvc
 	s.CheckoutService = checkoutService

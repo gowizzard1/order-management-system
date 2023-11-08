@@ -3,16 +3,18 @@ package customers
 import (
 	"context"
 	"fmt"
+	"log"
+
 	"github.com/leta/order-management-system/orders/generated"
 	"github.com/leta/order-management-system/orders/internal/interfaces/api/customers"
-	"log"
+	"github.com/leta/order-management-system/orders/pkg/utils"
 )
 
 type CustomerService struct {
 	customersRepo customers.CustomerRepositoryInterface
 }
 
-func NewCustomerService(customersRepo customers.CustomerRepository) customers.CustomerServiceInterface {
+func NewCustomerService(customersRepo customers.CustomerRepositoryInterface) customers.CustomerServiceInterface {
 	return &CustomerService{
 		customersRepo: customersRepo,
 	}
@@ -89,9 +91,9 @@ func (s *CustomerService) UpdateCustomer(
 
 	p, err := s.customersRepo.UpdateCustomer(ctx, in.GetId(), &customers.CustomerUpdate{
 		FirstName: utils.StringPtr(in.GetUpdate().GetFirstName()),
-		LastName:  pkg.StringPtr(in.GetUpdate().GetLastName()),
-		Phone:     pkg.StringPtr(in.GetUpdate().GetPhone()),
-		Email:     pkg.StringPtr(in.GetUpdate().GetEmail()),
+		LastName:  utils.StringPtr(in.GetUpdate().GetLastName()),
+		Phone:     utils.StringPtr(in.GetUpdate().GetPhone()),
+		Email:     utils.StringPtr(in.GetUpdate().GetEmail()),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to update customers: %w", err)

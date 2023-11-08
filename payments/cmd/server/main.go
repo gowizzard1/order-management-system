@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
+	"github.com/leta/order-management-system/payments/internal/api/payments"
 	"log"
 	"os"
 
 	o "github.com/leta/order-management-system/orders/pkg/client"
-	db "github.com/leta/order-management-system/payments/internal/firebase"
+	db "github.com/leta/order-management-system/payments/db/firebase"
 	"github.com/leta/order-management-system/payments/internal/handlers/grpc"
 	"github.com/leta/order-management-system/payments/internal/mpesa"
 )
@@ -44,7 +45,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to orders service: %v", err)
 	}
-	orderClient := orders.NewGrpcOrderClient(conn)
+	orderClient := o.NewGrpcOrderClient(conn)
 
 	// Setup firebase client and firestore service
 	firebase := db.NewFirebaseService()
@@ -55,7 +56,7 @@ func main() {
 	defer firestoreClient.Close()
 
 	firestoreService := db.NewFirestoreService(firestoreClient)
-	paymentRepository := db.NewPaymentsRepository(firestoreService)
+	paymentRepository := payments.NewPaymentsRepository(firestoreService)
 
 	paymentService := mpesa.NewPaymentsService(mpesaService, orderClient, paymentRepository)
 

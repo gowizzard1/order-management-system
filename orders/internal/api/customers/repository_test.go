@@ -3,15 +3,17 @@ package customers_test
 import (
 	"context"
 	"encoding/json"
-	"github.com/leta/order-management-system/orders/internal/interfaces/api/customers"
 	"reflect"
 	"testing"
 	"time"
 
+	c "github.com/leta/order-management-system/orders/internal/api/customers"
+	"github.com/leta/order-management-system/orders/internal/interfaces/api/customers"
+
 	db "github.com/leta/order-management-system/orders/db/firebase"
 )
 
-func deleteTestCustomer(t *testing.T, ctx context.Context, cs customers.CustomerRepository, id string) {
+func deleteTestCustomer(t *testing.T, ctx context.Context, cs customers.CustomerRepositoryInterface, id string) {
 	err := cs.DeleteCustomer(ctx, id)
 	if err != nil {
 		t.Fatalf("failed to delete product: %v", err)
@@ -20,7 +22,7 @@ func deleteTestCustomer(t *testing.T, ctx context.Context, cs customers.Customer
 
 func TestCustomerService_CheckPreconditions(t *testing.T) {
 	type fields struct {
-		db *db.FirestoreService
+		repo customers.CustomerRepositoryInterface
 	}
 	tests := []struct {
 		name      string
@@ -30,14 +32,14 @@ func TestCustomerService_CheckPreconditions(t *testing.T) {
 		{
 			name: "Check Preconditions Failed - nil DB",
 			fields: fields{
-				db: nil,
+				repo: nil,
 			},
 			wantPanic: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := db.NewCustomerService(tt.fields.db)
+			s := c.NewCustomerService(tt.fields.repo)
 			defer func() {
 				r := recover()
 				if (r != nil) != tt.wantPanic {

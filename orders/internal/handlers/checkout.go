@@ -2,18 +2,18 @@ package handlers
 
 import (
 	"context"
-	"fmt"
+	"github.com/leta/order-management-system/orders/generated"
 )
 
 func (s *GRPCServer) ProcessCheckout(
-	ctx context.Context, in *orders_service.ProcessCheckoutRequest) (*orders_service.ProcessCheckoutResponse, error) {
+	ctx context.Context, in *generated.ProcessCheckoutRequest) (*generated.ProcessCheckoutResponse, error) {
 
 	o, err := s.CheckoutService.ProcessCheckout(ctx, in.GetOrderId())
 	if err != nil {
-		return nil, Error(fmt.Errorf("failed to process checkout: %w", err))
+		return nil, err
 	}
 
-	return &orders_service.ProcessCheckoutResponse{
+	return &generated.ProcessCheckoutResponse{
 		OrderId:    o.Id,
 		CustomerId: o.CustomerId,
 		Status:     getGRPCOrderStatus(o.OrderStatus),

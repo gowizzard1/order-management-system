@@ -2,13 +2,12 @@ package client
 
 import (
 	"github.com/leta/order-management-system/orders/generated"
-	"github.com/leta/order-management-system/payments/pkg/utils"
 )
 
-type HealthCheckRequest = utils.HealthCheckRequest
-type HealthCheckResponse = utils.HealthCheckResponse
+//type HealthCheckRequest = utils.HealthCheckRequest
+//type HealthCheckResponse = utils.HealthCheckResponse
 
-type UpdateOrderStatusRequest = shared.UpdateOrderStatusRequest
+type UpdateOrderStatusRequest = generated.UpdateOrderStatusRequest
 type UpdateOrderStatusResponse = generated.UpdateOrderStatusResponse
 
 var OrderStatusPaid = generated.OrderStatus_PAID

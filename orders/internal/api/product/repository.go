@@ -12,13 +12,11 @@ import (
 	"google.golang.org/api/iterator"
 )
 
-//var _ repository.ProductRepository = (*ProductRepository)(nil)
-
 type productRepository struct {
 	db *db.FirestoreService
 }
 
-func NewProductRepository(db *db.FirestoreService) product.ProductRepositoryInterface {
+func NewProductRepository(db *db.FirestoreService) product.RepositoryInterface {
 	return &productRepository{
 		db: db,
 	}

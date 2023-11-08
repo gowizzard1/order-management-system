@@ -14,8 +14,6 @@ import (
 	"time"
 )
 
-//var _ repository.CustomerRepository = (*CustomerRepository)(nil)
-
 type customerRepository struct {
 	db *firebase.FirestoreService
 }

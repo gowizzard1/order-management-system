@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/leta/order-management-system/orders/generated"
 	"github.com/leta/order-management-system/orders/internal/interfaces/api/orders"
-	"github.com/leta/order-management-system/orders/internal/repository"
 	"github.com/leta/order-management-system/orders/pkg/utils"
 )
 
@@ -19,15 +18,15 @@ func NewOrdersService(orderRepo OrderRepository) orders.OrderServiceInterface {
 }
 func (s *orderService) CreateOrder(ctx context.Context, in *generated.CreateOrderRequest) (*generated.CreateOrderResponse, error) {
 
-	var items []*repository.OrderItem
+	var items []*orders.OrderItem
 	for _, item := range in.GetOrderItems() {
-		items = append(items, &repository.OrderItem{
+		items = append(items, &orders.OrderItem{
 			ProductId: item.GetProductId(),
 			Quantity:  uint(item.GetQuantity()),
 		})
 	}
 
-	p, err := s.orderRepo.CreateOrder(ctx, &repository.Order{
+	p, err := s.orderRepo.CreateOrder(ctx, &orders.Order{
 		CustomerId: in.GetCustomerId(),
 		Items:      items,
 	})
@@ -121,7 +120,7 @@ func (s *orderService) DeleteOrder(ctx context.Context, in *generated.DeleteOrde
 func (s *orderService) CreateOrderItem(
 	ctx context.Context, in *generated.CreateOrderItemRequest) (*generated.CreateOrderItemResponse, error) {
 
-	orderItem, err := s.orderRepo.CreateOrderItem(ctx, in.GetOrderId(), &repository.OrderItem{
+	orderItem, err := s.orderRepo.CreateOrderItem(ctx, in.GetOrderId(), &orders.OrderItem{
 		ProductId: in.GetProductId(),
 		Quantity:  uint(in.GetQuantity()),
 	})
@@ -178,7 +177,7 @@ func (s *orderService) UpdateOrderItem(
 		quantity = new(uint)
 		*quantity = uint(in.GetUpdate().GetQuantity())
 	}
-	orderItem, err := s.orderRepo.UpdateOrderItem(ctx, in.GetOrderId(), in.GetId(), &repository.OrderItemUpdate{
+	orderItem, err := s.orderRepo.UpdateOrderItem(ctx, in.GetOrderId(), in.GetId(), &orders.OrderItemUpdate{
 		Quantity: quantity,
 	})
 	if err != nil {

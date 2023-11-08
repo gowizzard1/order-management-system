@@ -12,7 +12,6 @@ import (
 var _ PaymentsClient = (*GrpcPaymentsClient)(nil)
 
 type PaymentsClient interface {
-	HealthCheck(ctx context.Context, req *HealthCheckRequest) (*HealthCheckResponse, error)
 	ProcessMpesaPayment(ctx context.Context, req *ProcessMpesaPaymentRequest) (*ProcessMpesaPaymentResponse, error)
 }
 

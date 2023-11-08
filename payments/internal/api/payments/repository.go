@@ -10,8 +10,6 @@ import (
 	"time"
 )
 
-var _ repository.PaymentsRepository = (*PaymentsRepository)(nil)
-
 type PaymentsRepository struct {
 	db *db.FirestoreService
 }

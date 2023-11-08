@@ -2,25 +2,28 @@ package checkout
 
 import (
 	"context"
+
+	"github.com/leta/order-management-system/orders/internal/interfaces/api/customers"
+	"github.com/leta/order-management-system/orders/internal/interfaces/api/orders"
+	"github.com/leta/order-management-system/orders/internal/interfaces/api/product"
 	"github.com/leta/order-management-system/orders/pkg/utils"
-	"github.com/leta/order-management-system/shared"
 
 	"github.com/leta/order-management-system/orders/internal/service"
 	"github.com/leta/order-management-system/payments/pkg/client"
 )
 
 type CheckoutService struct {
-	productRepository  products.ProductRepository
-	customerRepository repository.CustomerRepository
-	orderRepository    repository.OrderRepository
+	productRepository  product.RepositoryInterface
+	customerRepository customers.CustomerRepositoryInterface
+	orderRepository    orders.OrderRepository
 
 	paymentsClient client.PaymentsClient
 }
 
 func NewCheckoutService(
-	productRepository repository.ProductRepository,
-	customerRepository repository.CustomerRepository,
-	orderRepository repository.OrderRepository,
+	productRepository product.RepositoryInterface,
+	customerRepository customers.CustomerRepositoryInterface,
+	orderRepository orders.OrderRepository,
 	paymentsClient client.PaymentsClient) *CheckoutService {
 
 	return &CheckoutService{
@@ -73,7 +76,7 @@ func (s *CheckoutService) GetOrderCost(ctx context.Context, orderId string) (uin
 func (s *CheckoutService) ProcessCheckout(ctx context.Context, orderId string) (*service.Order, error) {
 	s.CheckPreconditions()
 
-	order, err := s.orderRepository.UpdateOrderStatus(ctx, orderId, shared.OrderStatusProcessing)
+	order, err := s.orderRepository.UpdateOrderStatus(ctx, orderId, utils.OrderStatusProcessing)
 	if err != nil {
 		return nil, utils.Errorf(utils.INTERNAL_ERROR, "failed to update orders status: %v", err)
 	}
@@ -83,7 +86,7 @@ func (s *CheckoutService) ProcessCheckout(ctx context.Context, orderId string) (
 		return nil, utils.Errorf(utils.INTERNAL_ERROR, "failed to get customers: %v", err)
 	}
 
-	phoneNo, err := shared.StringToUint(customer.Phone)
+	phoneNo, err := utils.StringToUint(customer.Phone)
 	if err != nil {
 		return nil, utils.Errorf(utils.INTERNAL_ERROR, "failed to convert phone number to uint: %v", err)
 	}
@@ -110,7 +113,7 @@ func (s *CheckoutService) ProcessCheckout(ctx context.Context, orderId string) (
 	return s.unmarshallRepositoryOrder(order), nil
 }
 
-func (s *CheckoutService) unmarshallOrderItem(item *repository.OrderItem) *service.OrderItem {
+func (s *CheckoutService) unmarshallOrderItem(item *orders.OrderItem) *service.OrderItem {
 	return &service.OrderItem{
 		Id:        item.Id,
 		ProductId: item.ProductId,
@@ -120,7 +123,7 @@ func (s *CheckoutService) unmarshallOrderItem(item *repository.OrderItem) *servi
 	}
 }
 
-func (s *CheckoutService) unmarshallRepositoryOrder(order *repository.Order) *service.Order {
+func (s *CheckoutService) unmarshallRepositoryOrder(order *orders.Order) *service.Order {
 
 	orderItems := make([]*service.OrderItem, len(order.Items))
 	for i, item := range order.Items {

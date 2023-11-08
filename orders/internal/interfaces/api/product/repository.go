@@ -2,7 +2,8 @@ package product
 
 import "context"
 
-type ProductRepositoryInterface interface {
+// RepositoryInterface is an interface for product repo
+type RepositoryInterface interface {
 	CreateProduct(ctx context.Context, product *Product) (*Product, error)
 	GetProduct(ctx context.Context, id string) (*Product, error)
 	ListProducts(ctx context.Context) ([]*Product, error)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/leta/order-management-system/orders/generated"
+	"github.com/leta/order-management-system/orders/internal/interfaces/api/customers"
 	"github.com/leta/order-management-system/orders/pkg/utils"
 	"log"
 )
@@ -13,7 +14,7 @@ func (s *GRPCServer) CreateCustomer(
 
 	log.Printf("Received: %v", in.GetFirstName())
 
-	p, err := s.CustomerRepository.CreateCustomer(ctx, &repository.Customer{
+	p, err := s.CustomerRepository.CreateCustomer(ctx, &customers.Customer{
 		FirstName: in.GetFirstName(),
 		LastName:  in.GetLastName(),
 		Email:     in.GetEmail(),
@@ -78,7 +79,7 @@ func (s *GRPCServer) UpdateCustomer(
 
 	log.Printf("Received: %v", in)
 
-	p, err := s.CustomerRepository.UpdateCustomer(ctx, in.GetId(), &repository.CustomerUpdate{
+	p, err := s.CustomerRepository.UpdateCustomer(ctx, in.GetId(), &customers.CustomerUpdate{
 		FirstName: utils.StringPtr(in.GetUpdate().GetFirstName()),
 		LastName:  utils.StringPtr(in.GetUpdate().GetLastName()),
 		Phone:     utils.StringPtr(in.GetUpdate().GetPhone()),

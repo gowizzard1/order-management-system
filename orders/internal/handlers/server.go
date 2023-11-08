@@ -25,9 +25,11 @@ type GRPCServer struct {
 	// Internal services &  repositories
 	CheckoutService service.CheckoutService
 
-	ProductRepository product.ProductRepository
-	CustomerService   customers.CustomerServiceInterface
-	OrderService      orders.OrderServiceInterface
+	ProductRepository  product.RepositoryInterface
+	CustomerService    customers.CustomerServiceInterface
+	OrderService       orders.OrderServiceInterface
+	OrderRepository    orders.OrderRepository
+	CustomerRepository customers.CustomerRepositoryInterface
 }
 
 // NewGRPCServer creates a new instance of GRPCServer.

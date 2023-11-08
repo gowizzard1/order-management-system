@@ -1,7 +1,6 @@
 package client
 
-type HealthCheckRequest = payment_service.HealthCheckRequest
-type HealthCheckResponse = payment_service.HealthCheckResponse
+import "github.com/leta/order-management-system/payments/generated"
 
-type ProcessMpesaPaymentRequest = payment_service.MpesaPaymentRequest
-type ProcessMpesaPaymentResponse = payment_service.MpesaPaymentResponse
+type ProcessMpesaPaymentRequest = generated.MpesaPaymentRequest
+type ProcessMpesaPaymentResponse = generated.MpesaPaymentResponse

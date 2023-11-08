@@ -1,6 +1,7 @@
 package orders
 
 import (
+	"github.com/leta/order-management-system/orders/internal/interfaces/api/orders"
 	"github.com/leta/order-management-system/orders/pkg/models"
 	"github.com/leta/order-management-system/orders/pkg/utils"
 
@@ -9,13 +10,10 @@ import (
 	"time"
 
 	"cloud.google.com/go/firestore"
-	"github.com/leta/order-management-system/orders/internal/repository"
 	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-
-var _ repository.OrderRepository = (*OrderRepository)(nil)
 
 type OrderRepository struct {
 	db *firebase.FirestoreService
@@ -39,7 +37,7 @@ func (r *OrderRepository) orderCollection() *firestore.CollectionRef {
 	return r.db.Client.Collection("orders")
 }
 
-func (r *OrderRepository) CreateOrder(ctx context.Context, order *repository.Order) (*repository.Order, error) {
+func (r *OrderRepository) CreateOrder(ctx context.Context, order *orders.Order) (*orders.Order, error) {
 	r.CheckPreconditions()
 
 	// Set CreatedAt and UpdatedAt to the current time
@@ -72,7 +70,7 @@ func (r *OrderRepository) CreateOrder(ctx context.Context, order *repository.Ord
 	return order, nil
 }
 
-func (r *OrderRepository) GetOrder(ctx context.Context, id string) (*repository.Order, error) {
+func (r *OrderRepository) GetOrder(ctx context.Context, id string) (*orders.Order, error) {
 	r.CheckPreconditions()
 
 	if id == "" {
@@ -105,12 +103,12 @@ func (r *OrderRepository) GetOrder(ctx context.Context, id string) (*repository.
 	return order, nil
 }
 
-func (r *OrderRepository) ListOrders(ctx context.Context) ([]*repository.Order, error) {
+func (r *OrderRepository) ListOrders(ctx context.Context) ([]*orders.Order, error) {
 	r.CheckPreconditions()
 
 	iter := r.orderCollection().Documents(ctx)
 
-	orders := make([]*repository.Order, 0)
+	orders := make([]*orders.Order, 0)
 
 	for {
 		doc, err := iter.Next()
@@ -144,7 +142,7 @@ func (r *OrderRepository) ListOrders(ctx context.Context) ([]*repository.Order, 
 }
 
 func (r *OrderRepository) UpdateOrderStatus(
-	ctx context.Context, orderId string, status utils.OrderStatus) (*repository.Order, error) {
+	ctx context.Context, orderId string, status utils.OrderStatus) (*orders.Order, error) {
 	r.CheckPreconditions()
 
 	order, err := r.GetOrder(ctx, orderId)
@@ -182,7 +180,7 @@ func (r *OrderRepository) orderItemCollection(orderId string) *firestore.Collect
 }
 
 func (r *OrderRepository) CreateOrderItem(
-	ctx context.Context, orderId string, orderItem *repository.OrderItem) (*repository.OrderItem, error) {
+	ctx context.Context, orderId string, orderItem *orders.OrderItem) (*orders.OrderItem, error) {
 
 	r.CheckPreconditions()
 
@@ -210,7 +208,7 @@ func (r *OrderRepository) CreateOrderItem(
 }
 
 func (r *OrderRepository) CreateOrderItems(
-	ctx context.Context, orderId string, orderItems []*repository.OrderItem) ([]*repository.OrderItem, error) {
+	ctx context.Context, orderId string, orderItems []*orders.OrderItem) ([]*orders.OrderItem, error) {
 
 	r.CheckPreconditions()
 
@@ -221,7 +219,7 @@ func (r *OrderRepository) CreateOrderItems(
 	bulkWriter := r.db.Client.BulkWriter(ctx)
 
 	currentTime := time.Now().Format(time.RFC3339)
-	var createdOrderItems []*repository.OrderItem
+	var createdOrderItems []*orders.OrderItem
 
 	for _, orderItem := range orderItems {
 		// Set CreatedAt and UpdatedAt to the current time
@@ -251,7 +249,7 @@ func (r *OrderRepository) CreateOrderItems(
 }
 
 func (r *OrderRepository) GetOrderItem(
-	ctx context.Context, orderId string, orderItemId string) (*repository.OrderItem, error) {
+	ctx context.Context, orderId string, orderItemId string) (*orders.OrderItem, error) {
 
 	r.CheckPreconditions()
 
@@ -280,7 +278,7 @@ func (r *OrderRepository) GetOrderItem(
 	return orderItem, nil
 }
 
-func (r *OrderRepository) ListOrderItems(ctx context.Context, orderId string) ([]*repository.OrderItem, error) {
+func (r *OrderRepository) ListOrderItems(ctx context.Context, orderId string) ([]*orders.OrderItem, error) {
 	r.CheckPreconditions()
 
 	if orderId == "" {
@@ -289,7 +287,7 @@ func (r *OrderRepository) ListOrderItems(ctx context.Context, orderId string) ([
 
 	iter := r.orderItemCollection(orderId).Documents(ctx)
 
-	orderItems := make([]*repository.OrderItem, 0)
+	orderItems := make([]*orders.OrderItem, 0)
 
 	for {
 		doc, err := iter.Next()
@@ -316,7 +314,7 @@ func (r *OrderRepository) ListOrderItems(ctx context.Context, orderId string) ([
 }
 
 func (r *OrderRepository) UpdateOrderItem(
-	ctx context.Context, orderId string, orderItemId string, update *repository.OrderItemUpdate) (*repository.OrderItem, error) {
+	ctx context.Context, orderId string, orderItemId string, update *orders.OrderItemUpdate) (*orders.OrderItem, error) {
 
 	r.CheckPreconditions()
 
@@ -364,7 +362,7 @@ func (r *OrderRepository) DeleteOrderItem(ctx context.Context, orderId string, o
 	return nil
 }
 
-func (r *OrderRepository) marshallOrder(order *repository.Order) *models.OrderModel {
+func (r *OrderRepository) marshallOrder(order *orders.Order) *models.OrderModel {
 	return &models.OrderModel{
 		CustomerId:  order.CustomerId,
 		Items:       r.marshallOrderItems(order.Items),
@@ -374,8 +372,8 @@ func (r *OrderRepository) marshallOrder(order *repository.Order) *models.OrderMo
 	}
 }
 
-func (r *OrderRepository) unmarshallOrder(order *models.OrderModel) *repository.Order {
-	return &repository.Order{
+func (r *OrderRepository) unmarshallOrder(order *models.OrderModel) *orders.Order {
+	return &orders.Order{
 		CustomerId:  order.CustomerId,
 		Items:       r.unmarshallOrderItems(order.Items),
 		OrderStatus: utils.OrderStatus(order.OrderStatus),
@@ -384,7 +382,7 @@ func (r *OrderRepository) unmarshallOrder(order *models.OrderModel) *repository.
 	}
 }
 
-func (r *OrderRepository) marshallOrderItems(items []*repository.OrderItem) []*models.OrderItemModel {
+func (r *OrderRepository) marshallOrderItems(items []*orders.OrderItem) []*models.OrderItemModel {
 	orderItems := make([]*models.OrderItemModel, 0)
 
 	for _, item := range items {
@@ -394,8 +392,8 @@ func (r *OrderRepository) marshallOrderItems(items []*repository.OrderItem) []*m
 	return orderItems
 }
 
-func (r *OrderRepository) unmarshallOrderItems(items []*models.OrderItemModel) []*repository.OrderItem {
-	orderItems := make([]*repository.OrderItem, 0)
+func (r *OrderRepository) unmarshallOrderItems(items []*models.OrderItemModel) []*orders.OrderItem {
+	orderItems := make([]*orders.OrderItem, 0)
 
 	for _, item := range items {
 		orderItems = append(orderItems, r.unmarshallOrderItem(item))
@@ -404,7 +402,7 @@ func (r *OrderRepository) unmarshallOrderItems(items []*models.OrderItemModel) [
 	return orderItems
 }
 
-func (r *OrderRepository) marshallOrderItem(item *repository.OrderItem) *models.OrderItemModel {
+func (r *OrderRepository) marshallOrderItem(item *orders.OrderItem) *models.OrderItemModel {
 	return &models.OrderItemModel{
 		ProductId: item.ProductId,
 		Quantity:  int(item.Quantity),
@@ -413,8 +411,8 @@ func (r *OrderRepository) marshallOrderItem(item *repository.OrderItem) *models.
 	}
 }
 
-func (r *OrderRepository) unmarshallOrderItem(item *models.OrderItemModel) *repository.OrderItem {
-	return &repository.OrderItem{
+func (r *OrderRepository) unmarshallOrderItem(item *models.OrderItemModel) *orders.OrderItem {
+	return &orders.OrderItem{
 		ProductId: item.ProductId,
 		Quantity:  uint(item.Quantity),
 		CreatedAt: item.CreatedAt,
